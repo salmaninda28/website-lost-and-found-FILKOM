@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found - FILKOM UB</title>
+
+    <!-- ── TAILWIND CSS (via CDN) ── -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+    <!-- ── FONT: Clash Display (untuk heading) ── -->
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@600&display=swap" rel="stylesheet">
+
+    <!-- ── FONT: Poppins (untuk body text) ── -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- ── FLATPICKR: library kalender (CSS-nya dulu) ── -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <!-- ── CUSTOM CSS ── -->
+    <style>
+        /* Font default seluruh halaman */
+        body { font-family: 'Poppins', sans-serif; }
+
+        /* Font khusus heading h1 & h2 */
+        h1, h2 { font-family: 'Clash Display', sans-serif; }
+
+        /* Override style kalender flatpickr */
+        .flatpickr-calendar { border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.12); border: none; }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #F09B37; border-color: #F09B37; }
+        .flatpickr-day:hover { background: #FEF3E2; }
+
+        /* Efek hover pada kartu barang */
+        .item-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .item-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.12); }
+
+        /* Zona upload foto — border dashed oranye */
+        .upload-zone { border: 2px dashed #F09B37; transition: background 0.2s; }
+        .upload-zone.drag-over { background: #FEF3E2; } /* aktif saat file di-drag ke atas */
+
+        /* Toast notifikasi (muncul di bawah layar) */
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px); /* awalnya tersembunyi di bawah */
+            background: #1a1a1a;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 50px;
+            font-size: 14px;
+            z-index: 9999;
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        /* Class .show ditambahkan JS saat toast harus muncul */
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* Animasi kartu baru saat ditambahkan ke grid */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card-new { animation: fadeInUp 0.4s ease forwards; }
+
+        /* Garis bawah animasi pada link navbar */
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 0; height: 2px;
+            background: #F09B37;
+            transition: width 0.3s;
+        }
+        .nav-link:hover::after { width: 100%; }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800">
+
+
+    <!-- ============================================================
+         NAVBAR — sticky di atas, blur transparan saat scroll
+    ============================================================ -->
+    <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md shadow-sm">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+
+            <!-- Logo -->
+            <div class="text-xl font-bold text-[#F09B37]">L&F FILKOM</div>
+
+            <!-- Menu navigasi -->
+            <ul class="flex gap-8 items-center">
+                <li><a href="#beranda"         class="nav-link hover:text-[#F09B37] transition font-medium">beranda</a></li>
+                <li><a href="#barang-section"  class="nav-link hover:text-[#F09B37] transition font-medium">barang</a></li>
+                <li><a href="#posting-section" class="nav-link hover:text-[#F09B37] transition font-medium">posting</a></li>
+            </ul>
+
+        </div>
+    </nav>
+    <!-- /NAVBAR -->
+
+
+    <!-- ============================================================
+         BERANDA — hero section: teks di kiri, gambar di kanan
+    ============================================================ -->
+    <section id="beranda" class="max-w-6xl mx-auto px-6 py-16">
+        <div class="flex flex-row items-center gap-12">
+
+            <!-- Kolom kiri: teks & CTA -->
+            <div class="flex-1 space-y-5">
+                <p class="text-[#F09B37] font-semibold text-sm">Halo, Selamat Datang</p>
+
+                <h1 class="text-4xl font-bold leading-tight">
+                    Lost & Found Center:<br>
+                    <span class="text-[#F09B37]">Kami Siap Membantu</span>
+                </h1>
+
+                <p class="text-gray-500 text-base leading-relaxed">
+                    Platform resmi untuk memudahkan civitas akademika<br>
+                    FILKOM UB menemukan barang yang hilang atau<br>
+                    melaporkan barang yang ditemukan di area kampus.
+                </p>
+
+                <!-- Tombol CTA -->
+                <div class="flex gap-3">
+                    <a href="#barang-section"
+                        class="bg-[#F09B37] text-white px-6 py-3 rounded-full hover:shadow-lg hover:shadow-[#F09B37]/30 transition-all font-semibold text-sm">
+                        lihat barang
+                    </a>
+                    <a href="#posting-section"
+                        class="border border-[#F09B37] text-[#F09B37] px-6 py-3 rounded-full hover:bg-[#FEF3E2] transition-all font-semibold text-sm">
+                        lapor barang
+                    </a>
+                </div>
+            </div>
+            <!-- /Kolom kiri -->
+
+            <!-- Kolom kanan: gambar hero -->
+            <div class="w-1/2">
+                <div class="w-full h-[380px] bg-gray-100 rounded-3xl overflow-hidden shadow-2xl">
+                    <img
+                        src="https://images.unsplash.com/photo-1588702547919-26089e690ecc?auto=format&fit=crop&q=80&w=800"
+                        alt="Lost and Found"
+                        class="w-full h-full object-cover"
+                    >
+                </div>
+            </div>
+            <!-- /Kolom kanan -->
+
+        </div>
+    </section>
+    <!-- /BERANDA -->
+
+
+    <!-- ============================================================
+         BARANG SECTION — tampil 2 kartu saja (preview)
+         Selengkapnya ada di section #semua-barang di bawah
+    ============================================================ -->
+    <section id="barang-section" class="max-w-6xl mx-auto px-5 py-10">
+        <div class="bg-white p-8 rounded-3xl shadow-xl flex flex-col gap-8">
+
+            <!-- Header & search bar -->
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+
+                <!-- Judul -->
+                <div>
+                    <h2 class="text-2xl font-bold">Cari Barang</h2>
+                    <p class="text-gray-400 text-sm mt-1">cari barangmu berdasarkan nama</p>
+                </div>
+
+                <!-- Input pencarian — oninput memanggil filterItems() di script.js -->
+                <div class="relative w-full max-w-sm">
+                    <input
+                        id="search-input"
+                        type="search"
+                        placeholder="Contoh: Kunci motor, KTM, Jaket..."
+                        class="w-full py-3 pl-5 pr-12 bg-[#FEF3E2] border-none rounded-full focus:ring-2 focus:ring-[#F09B37] outline-none text-sm"
+                        oninput="filterItems()"
+                    />
+                    <!-- Tombol ikon search (dekoratif) -->
+                    <button class="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-[#F09B37] text-white rounded-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </button>
+                </div>
+
+            </div>
+            <!-- /Header & search bar -->
+
+            <!-- Grid 2 kolom — kartu dirender oleh renderItems() di script.js -->
+            <div id="items-grid" class="grid grid-cols-2 gap-5">
+                <!-- Diisi JS -->
+            </div>
+
+            <!-- Tombol lanjut — klik panggil showAllItems() di script.js -->
+            <div class="flex justify-end">
+                <a href="#semua-barang" onclick="showAllItems(event)"
+                    class="flex items-center gap-2 text-gray-600 font-semibold hover:text-[#F09B37] transition text-sm">
+                    lanjut
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+
+        </div>
+    </section>
+    <!-- /BARANG SECTION -->
+
+
+    <!-- ============================================================
+         SEMUA BARANG — tersembunyi default (class "hidden")
+         Muncul saat klik tombol "lanjut" di atas
+    ============================================================ -->
+    <section id="semua-barang" class="max-w-6xl mx-auto px-5 pb-10 hidden">
+        <div class="bg-white p-8 rounded-3xl shadow-xl flex flex-col gap-6">
+
+            <!-- Header + tombol kembali -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold">Semua Barang</h2>
+                    <p class="text-gray-400 text-sm mt-1">Daftar lengkap barang hilang & ditemukan</p>
+                </div>
+                <!-- Klik panggil hideAllItems() di script.js -->
+                <button onclick="hideAllItems()"
+                    class="text-sm text-gray-400 hover:text-[#F09B37] transition flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Kembali
+                </button>
+            </div>
+
+            <!-- Grid 3 kolom semua barang — diisi JS -->
+            <div id="all-items-grid" class="grid grid-cols-2 md:grid-cols-3 gap-5">
+                <!-- Diisi JS -->
+            </div>
+
+        </div>
+    </section>
+    <!-- /SEMUA BARANG -->
+
+
+    <!-- ============================================================
+         POSTING SECTION — form lapor barang
+    ============================================================ -->
+    <section id="posting-section" class="max-w-6xl mx-auto px-5 py-10">
+        <div class="bg-white p-8 rounded-3xl shadow-xl">
+
+            <h2 class="text-2xl font-bold text-center mb-8">Laporkan Barang Hilang</h2>
+
+            <!-- Wrapper form (dibatasi lebar agar tidak terlalu lebar di layar besar) -->
+            <div class="max-w-2xl mx-auto space-y-5">
+
+
+                <!-- ── INPUT: Tanggal ── -->
+                <div>
+                    <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Tanggal
+                    </label>
+                    <!-- readonly karena nilai diisi oleh flatpickr (lihat script.js) -->
+                    <input id="tanggal-input" type="text" placeholder="Pilih tanggal..." readonly
+                        class="w-48 py-3 px-5 bg-[#FEF3E2] rounded-full outline-none text-sm cursor-pointer focus:ring-2 focus:ring-[#F09B37]"
+                    />
+                </div>
+                <!-- /Tanggal -->
+
+
+                <!-- ── INPUT: Nama Barang ── -->
+                <div>
+                    <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Nama Barang
+                    </label>
+                    <input id="nama-input" type="text" placeholder="Nama barang yang hilang/ditemukan..."
+                        class="w-full py-3 px-5 bg-[#FEF3E2] rounded-2xl outline-none text-sm focus:ring-2 focus:ring-[#F09B37]"
+                    />
+                </div>
+                <!-- /Nama Barang -->
+
+
+                <!-- ── INPUT: Lokasi Temuan ── -->
+                <div>
+                    <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        Lokasi Temuan
+                    </label>
+                    <input id="lokasi-input" type="text" placeholder="Gedung, lantai, ruangan..."
+                        class="w-full py-3 px-5 bg-[#FEF3E2] rounded-2xl outline-none text-sm focus:ring-2 focus:ring-[#F09B37]"
+                    />
+                </div>
+                <!-- /Lokasi Temuan -->
+
+
+                <!-- ── INPUT: Deskripsi Detail ── -->
+                <div>
+                    <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Deskripsi Detail
+                    </label>
+                    <textarea id="deskripsi-input" rows="4"
+                        placeholder="Jelaskan ciri-ciri barang, warna, merek, kondisi terakhir..."
+                        class="w-full py-3 px-5 bg-[#FEF3E2] rounded-2xl outline-none text-sm resize-none focus:ring-2 focus:ring-[#F09B37]">
+                    </textarea>
+                </div>
+                <!-- /Deskripsi Detail -->
+
+
+                <!-- ── INPUT: Foto & WhatsApp (2 kolom sejajar) ── -->
+                <div class="grid grid-cols-2 gap-5">
+
+                    <!-- Foto Barang -->
+                    <div>
+                        <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Foto Barang
+                        </label>
+
+                        <!--
+                            Zona upload:
+                            - klik  → buka file picker (#file-input)
+                            - drag  → handleDragOver / handleDragLeave
+                            - drop  → handleDrop
+                            semua fungsi ada di script.js
+                        -->
+                        <div id="upload-zone"
+                            class="upload-zone bg-[#FEF3E2] rounded-2xl p-6 flex flex-col items-center justify-center gap-2 cursor-pointer h-36 relative"
+                            onclick="document.getElementById('file-input').click()"
+                            ondragover="handleDragOver(event)"
+                            ondragleave="handleDragLeave(event)"
+                            ondrop="handleDrop(event)"
+                        >
+                            <!-- Input file asli (tersembunyi, dipicu oleh klik zona di atas) -->
+                            <input id="file-input" type="file" accept="image/*" class="hidden" onchange="handleFileSelect(event)" />
+
+                            <!-- Placeholder ikon & teks (disembunyikan JS setelah foto dipilih) -->
+                            <div id="upload-placeholder" class="flex flex-col items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#F09B37] opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                <p class="text-gray-400 text-xs text-center">klik atau drag foto barang</p>
+                            </div>
+
+                            <!-- Preview foto — ditampilkan JS setelah foto dipilih -->
+                            <img id="preview-img" class="hidden absolute inset-0 w-full h-full object-cover rounded-2xl" alt="preview" />
+                        </div>
+                    </div>
+                    <!-- /Foto Barang -->
+
+                    <!-- WhatsApp -->
+                    <div>
+                        <label class="flex items-center gap-2 font-semibold text-gray-700 mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                            </svg>
+                            WhatsApp
+                        </label>
+                        <input id="wa-input" type="text" placeholder="08xxxxxxxxxx"
+                            class="w-full py-3 px-5 bg-[#FEF3E2] rounded-2xl outline-none text-sm focus:ring-2 focus:ring-[#F09B37]"
+                        />
+                        <p class="text-xs text-gray-400 mt-2 px-1">Nomor yang bisa dihubungi</p>
+                    </div>
+                    <!-- /WhatsApp -->
+
+                </div>
+                <!-- /Foto & WhatsApp -->
+
+
+                <!-- ── TOMBOL SUBMIT — panggil submitItem() di script.js ── -->
+                <button onclick="submitItem()"
+                    class="w-full py-4 bg-[#F09B37] text-white rounded-full font-bold text-base hover:shadow-lg hover:shadow-[#F09B37]/30 hover:bg-[#e08c2a] transition-all mt-2">
+                    kirim
+                </button>
+
+            </div>
+            <!-- /Wrapper form -->
+
+        </div>
+    </section>
+    <!-- /POSTING SECTION -->
+
+
+    <!-- ============================================================
+         FOOTER
+    ============================================================ -->
+    <footer class="bg-white mt-10 border-t border-gray-100">
+        <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+            <!-- Brand -->
+            <div>
+                <div class="text-[#F09B37] font-bold text-lg">L & F FILKOM</div>
+                <p class="text-gray-400 text-sm mt-1">FILKOM UB. The Journey of Recovery</p>
+            </div>
+
+            <!-- Link navigasi footer -->
+            <ul class="flex gap-6 text-sm text-gray-500">
+                <li><a href="#beranda"         class="hover:text-[#F09B37] transition">Home</a></li>
+                <li><a href="#barang-section"  class="hover:text-[#F09B37] transition">Items</a></li>
+                <li><a href="#posting-section" class="hover:text-[#F09B37] transition">Post</a></li>
+                <li><a href="#"               class="hover:text-[#F09B37] transition">Contact Person</a></li>
+            </ul>
+
+        </div>
+    </footer>
+    <!-- /FOOTER -->
+
+
+    <!-- ============================================================
+         TOAST NOTIFIKASI
+         Elemen ini dimanipulasi oleh showToast() di script.js
+    ============================================================ -->
+    <div id="toast">✓ Barang berhasil dilaporkan!</div>
+
+
+    <!-- ── FLATPICKR JS (library kalender) ── -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+    <!-- ── SCRIPT UTAMA (semua logika JS ada di sini) ── -->
+    <script src="script.js"></script>
+
+</body>
+</html>
