@@ -22,7 +22,8 @@
     <!-- ── CUSTOM CSS ── -->
     <style>
         /* Font default seluruh halaman */
-        body { font-family: 'Poppins', sans-serif; }
+        body { font-family: 'Poppins', sans-serif; 
+        }
 
         /* Font khusus heading h1 & h2 */
         h1, h2 { font-family: 'Clash Display', sans-serif; }
@@ -384,6 +385,15 @@
                 </div>
                 <!-- /Foto & WhatsApp -->
 
+                <!-- ── INPUT: Kode Pengaman (password) ── -->
+                 <div>
+                    <label class="block mb-2 font-semibold text-sm">Kode Pengaman</label>
+                    <input
+                    type="password"
+                    id="kode-input"
+                    placeholder="Masukkan kode rahasia"
+                    class="w-full border rounded-xl px-4 py-3">
+                </div>
 
                 <!-- ── TOMBOL SUBMIT — panggil submitItem() di script.js ── -->
                 <button onclick="submitItem()"

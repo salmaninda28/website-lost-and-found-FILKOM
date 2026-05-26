@@ -18,7 +18,9 @@ let items = [
         tanggal: '16 April 2026',
         deskripsi: 'Kunci motor dengan gantungan kunci berbentuk boneka beruang warna cokelat.',
         wa: '081234567890',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
+        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400',
+        status: 'hilang',
+        kodeRahasia: '123',
     },
     {
         id: 2,
@@ -29,33 +31,8 @@ let items = [
         wa: '081298765432',
         foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
     },
-    {
-        id: 3,
-        nama: 'Kartu KTM',
-        lokasi: 'Lab Komputer',
-        tanggal: '14 April 2026',
-        deskripsi: 'Kartu KTM atas nama mahasiswa Teknik Informatika.',
-        wa: '085612345678',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-        id: 4,
-        nama: 'Jaket Hitam',
-        lokasi: 'Ruang G-1.5',
-        tanggal: '13 April 2026',
-        deskripsi: 'Jaket hoodie hitam ukuran L, ada tulisan UB di bagian dada.',
-        wa: '',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-        id: 5,
-        nama: 'Charger Laptop',
-        lokasi: 'Perpustakaan',
-        tanggal: '12 April 2026',
-        deskripsi: 'Charger laptop merk Asus, warna hitam, kepala bulat.',
-        wa: '082234567890',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
-    },
+   
+    
     {
         id: 6,
         nama: 'Kacamata',
@@ -125,7 +102,12 @@ if (document.getElementById('tanggal-input')) {
 // ──────────────────────────────────────────────────────────────
 function createCard(item, animate = false) {
     return `
-    <div class="item-card bg-white rounded-2xl overflow-hidden shadow-md border border-gray-100 ${animate ? 'card-new' : ''}">
+    <div class="item-card relative
+    ${item.status === 'ditemukan'
+        ? 'bg-gray-200 opacity-70'
+        : 'bg-white'}
+    rounded-2xl overflow-hidden shadow-md border border-gray-100
+    ${animate ? 'card-new' : ''}">
 
         <!-- Foto barang -->
         <div class="h-44 bg-gray-100 overflow-hidden">
@@ -135,6 +117,11 @@ function createCard(item, animate = false) {
                 class="w-full h-full object-cover"
             >
         </div>
+        ${item.status === 'ditemukan' ? `
+        <div class="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
+        FOUND
+        </div>
+        ` : ''}
 
         <!-- Info barang -->
         <div class="p-4">
@@ -281,9 +268,10 @@ function submitItem() {
     const tanggal   = document.getElementById('tanggal-input').value.trim();
     const wa        = document.getElementById('wa-input').value.trim();
     const deskripsi = document.getElementById('deskripsi-input').value.trim();
+    const kode = document.getElementById('kode-input').value.trim();
 
     // Validasi wajib
-    if (!nama || !lokasi || !tanggal) {
+    if (!nama || !lokasi || !tanggal || !kode) {
         showToast('⚠ Mohon isi Nama Barang, Lokasi, dan Tanggal', '#e74c3c');
         return;
     }
@@ -297,6 +285,8 @@ function submitItem() {
         deskripsi,
         wa,
         foto: uploadedFileData || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400',
+        status: 'hilang',
+        kodeRahasia: kode,
     };
 
     // Tambah ke depan array
@@ -334,6 +324,7 @@ function resetForm() {
     clearVal('deskripsi-input');
     clearVal('wa-input');
     clearVal('file-input');
+    clearVal('kode-input');
 
     // Kembalikan zona upload ke kondisi awal (hanya ada di index.html)
     const preview     = document.getElementById('preview-img');
@@ -421,6 +412,31 @@ function loadDetailPage() {
         btnWa.classList.remove('bg-[#F09B37]', 'hover:bg-[#e08c2a]');
         btnWa.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed', 'pointer-events-none');
     }
+
+    if (item.status === 'ditemukan') {
+
+    btnWa.removeAttribute('href');
+
+    btnWa.innerHTML = 'Barang sudah ditemukan';
+
+    btnWa.classList.remove(
+        'bg-[#F09B37]',
+        'hover:bg-[#e08c2a]'
+    );
+
+    btnWa.classList.add(
+        'bg-gray-300',
+        'text-gray-500',
+        'pointer-events-none'
+    );
+
+    // Tombol found disembunyikan
+    const btnFound = document.getElementById('btn-found');
+
+    if (btnFound) {
+        btnFound.style.display = 'none';
+    }
+}
 
     // Tampilkan komentar untuk item ini
     renderComments(id);
@@ -550,4 +566,37 @@ function submitComment() {
 // ──────────────────────────────────────────────────────────────
 if (document.getElementById('detail-nama')) {
     loadDetailPage();
+}
+
+function markAsFound() {
+
+    const params = new URLSearchParams(window.location.search);
+    const id = parseInt(params.get('id'));
+
+    const item = items.find(i => i.id === id);
+
+    if (!item) return;
+
+    // Tanya kode
+    const kode = prompt('Masukkan kode pengaman');
+
+    // Jika salah
+    if (kode !== item.kodeRahasia) {
+        showToast('⚠ Kode salah!', '#e74c3c');
+        return;
+    }
+
+    // Ubah status
+    item.status = 'ditemukan';
+
+    // Simpan
+    saveItemsToStorage();
+
+    // Notifikasi
+    showToast('✓ Barang ditandai ditemukan');
+
+    // Reload
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
