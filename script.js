@@ -1,15 +1,3 @@
-// ================================================================
-//  script.js — Lost & Found FILKOM UB
-//  File ini dipakai oleh KEDUA halaman: index.html & detail-barang.html
-//  Pastikan kedua HTML me-load file ini dengan: <script src="script.js">
-// ================================================================
-
-
-// ──────────────────────────────────────────────────────────────
-// 1. DATA — array berisi semua item barang
-//    Setiap objek punya: id, nama, lokasi, tanggal, foto, wa, deskripsi
-//    Item baru dari form akan di-unshift() (ditambah ke depan)
-// ──────────────────────────────────────────────────────────────
 let items = [
     {
         id: 1,
@@ -18,7 +6,7 @@ let items = [
         tanggal: '16 April 2026',
         deskripsi: 'Kunci motor dengan gantungan kunci berbentuk boneka beruang warna cokelat.',
         wa: '081234567890',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400',
+        foto: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
         status: 'hilang',
         kodeRahasia: '123',
     },
@@ -29,7 +17,7 @@ let items = [
         tanggal: '15 April 2026',
         deskripsi: 'Dompet kulit warna hitam, ada KTM di dalamnya.',
         wa: '081298765432',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
+        foto: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80'
     },
    
     
@@ -40,7 +28,7 @@ let items = [
         tanggal: '11 April 2026',
         deskripsi: 'Kacamata minus frame kotak warna silver.',
         wa: '087712345678',
-        foto: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'
+        foto: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400&q=80'
     },
 ];
 
@@ -48,16 +36,55 @@ let items = [
 let showAll = false;
 
 // Simpan sementara data foto yang di-upload (base64 string)
-let uploadedFileData = null;
+let uploadedFiles = {
+    hilang: [],
+    temuan: [],
+};
 
+// Tipe laporan aktif: 'hilang' atau 'temuan'
+let tipeLaporan = 'hilang';
 
-// ──────────────────────────────────────────────────────────────
+// Fungsi toggle — dipanggil saat tombol diklik
+function setTipe(tipe) {
+
+    tipeLaporan = tipe;
+
+    const formHilang = document.getElementById('form-hilang');
+    const formTemuan = document.getElementById('form-temuan');
+
+    const btnHilang = document.getElementById('btn-tipe-hilang');
+    const btnTemuan = document.getElementById('btn-tipe-temuan');
+
+    if (tipe === 'hilang') {
+
+        formHilang.classList.remove('hidden');
+        formTemuan.classList.add('hidden');
+
+        btnHilang.className =
+            'px-6 py-2.5 rounded-full font-semibold text-sm bg-[#F09B37] text-white transition-all';
+
+        btnTemuan.className =
+            'px-6 py-2.5 rounded-full font-semibold text-sm bg-gray-100 text-gray-400 transition-all';
+
+    } else {
+
+        formTemuan.classList.remove('hidden');
+        formHilang.classList.add('hidden');
+
+        btnTemuan.className =
+            'px-6 py-2.5 rounded-full font-semibold text-sm bg-[#F09B37] text-white transition-all';
+
+        btnHilang.className =
+            'px-6 py-2.5 rounded-full font-semibold text-sm bg-gray-100 text-gray-400 transition-all';
+    }
+}
+
 // 2. LOCALSTORAGE ITEMS
 //
 //  index.html dan detail-barang.html adalah file BERBEDA.
 //  Variabel JS tidak bisa dibagikan langsung antar halaman.
 //  localStorage menyimpan data di browser, bisa dibaca semua halaman.
-// ──────────────────────────────────────────────────────────────
+
 
 // Simpan array items ke localStorage (dipanggil setiap ada perubahan)
 function saveItemsToStorage() {
@@ -79,31 +106,37 @@ function loadItemsFromStorage() {
 loadItemsFromStorage();
 
 
-// ──────────────────────────────────────────────────────────────
 // 3. KALENDER — inisialisasi flatpickr pada input tanggal
 //    Dibungkus pengecekan agar tidak error di halaman detail
-// ──────────────────────────────────────────────────────────────
-if (document.getElementById('tanggal-input')) {
-    flatpickr('#tanggal-input', {
-        locale: 'id',           // bahasa Indonesia
-        dateFormat: 'd F Y',    // contoh: "16 April 2026"
-        maxDate: 'today',       // tidak bisa pilih tanggal masa depan
-        disableMobile: false,
+
+if (document.getElementById('tanggal-hilang')) {
+    flatpickr('#tanggal-hilang', {
+        locale: 'id',
+        dateFormat: 'd F Y',
+        maxDate: 'today',
+    });
+}
+
+if (document.getElementById('tanggal-temuan')) {
+    flatpickr('#tanggal-temuan', {
+        locale: 'id',
+        dateFormat: 'd F Y',
+        maxDate: 'today',
     });
 }
 
 
-// ──────────────────────────────────────────────────────────────
+
 // 4. RENDER KARTU — membuat HTML satu kartu barang
 //
 //    Parameter:
 //      item    — objek data barang
 //      animate — true = kartu pakai animasi fadeInUp
-// ──────────────────────────────────────────────────────────────
+
 function createCard(item, animate = false) {
     return `
     <div class="item-card relative
-    ${item.status === 'ditemukan'
+    ${item.status === 'temuan'
         ? 'bg-gray-200 opacity-70'
         : 'bg-white'}
     rounded-2xl overflow-hidden shadow-md border border-gray-100
@@ -117,7 +150,7 @@ function createCard(item, animate = false) {
                 class="w-full h-full object-cover"
             >
         </div>
-        ${item.status === 'ditemukan' ? `
+        ${item.status === 'temuan' ? `
         <div class="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
         FOUND
         </div>
@@ -219,64 +252,113 @@ function hideAllItems() {
 }
 
 
-// ──────────────────────────────────────────────────────────────
 // 9. UPLOAD FOTO — klik, drag, drop
-// ──────────────────────────────────────────────────────────────
+function handleFileSelect(event, tipe) {
+    const files = Array.from(event.target.files);
 
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) previewFile(file);
+    if (files.length > 0) {
+        previewFiles(files, tipe);
+    }
 }
 
-function handleDragOver(e) {
+function handleDragOver(e, tipe) {
     e.preventDefault();
-    document.getElementById('upload-zone').classList.add('drag-over');
+
+    document
+        .getElementById(`upload-zone-${tipe}`)
+        .classList.add('drag-over');
 }
 
-function handleDragLeave(e) {
-    document.getElementById('upload-zone').classList.remove('drag-over');
+function handleDragLeave(e, tipe) {
+
+    document
+        .getElementById(`upload-zone-${tipe}`)
+        .classList.remove('drag-over');
 }
 
-function handleDrop(e) {
+function handleDrop(e, tipe) {
+
     e.preventDefault();
-    document.getElementById('upload-zone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) previewFile(file);
+
+    document
+        .getElementById(`upload-zone-${tipe}`)
+        .classList.remove('drag-over');
+
+    const files = Array.from(e.dataTransfer.files)
+        .filter(file => file.type.startsWith('image/'));
+
+    if (files.length > 0) {
+        previewFiles(files, tipe);
+    }
 }
 
-// Baca file sebagai base64 → tampilkan preview
-function previewFile(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        uploadedFileData = e.target.result;
-        const preview     = document.getElementById('preview-img');
-        const placeholder = document.getElementById('upload-placeholder');
-        preview.src = uploadedFileData;
-        preview.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
+function previewFiles(files, tipe) {
+
+    uploadedFiles[tipe] = [];
+
+    const container =
+        document.getElementById(`preview-container-${tipe}`);
+
+    const placeholder =
+        document.getElementById(`placeholder-${tipe}`);
+
+    container.innerHTML = '';
+
+    placeholder.classList.add('hidden');
+    container.classList.remove('hidden');
+
+    files.forEach(file => {
+
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+
+            uploadedFiles[tipe].push(e.target.result);
+
+            const img = document.createElement('img');
+
+            img.src = e.target.result;
+
+            img.className =
+                'w-full h-28 object-cover rounded-xl';
+
+            container.appendChild(img);
+        };
+
+        reader.readAsDataURL(file);
+    });
 }
 
 
-// ──────────────────────────────────────────────────────────────
 // 10. SUBMIT FORM — dipanggil saat tombol "kirim" diklik
-// ──────────────────────────────────────────────────────────────
-function submitItem() {
-    const nama      = document.getElementById('nama-input').value.trim();
-    const lokasi    = document.getElementById('lokasi-input').value.trim();
-    const tanggal   = document.getElementById('tanggal-input').value.trim();
-    const wa        = document.getElementById('wa-input').value.trim();
-    const deskripsi = document.getElementById('deskripsi-input').value.trim();
-    const kode = document.getElementById('kode-input').value.trim();
+function submitItem(tipe) {
 
-    // Validasi wajib
-    if (!nama || !lokasi || !tanggal || !kode) {
-        showToast('⚠ Mohon isi Nama Barang, Lokasi, dan Tanggal', '#e74c3c');
+    let nama, lokasi, tanggal, wa, deskripsi, kode;
+
+    if (tipe === 'hilang') {
+
+        nama = document.getElementById('nama-hilang').value.trim();
+        lokasi = 'Belum diketahui';
+        tanggal = document.getElementById('tanggal-hilang').value.trim();
+        wa = document.getElementById('wa-hilang').value.trim();
+        deskripsi = document.getElementById('deskripsi-hilang').value.trim();
+        kode = '';
+
+    } else {
+
+        nama = document.getElementById('nama-temuan').value.trim();
+        lokasi = document.getElementById('lokasi-temuan').value.trim();
+        tanggal = document.getElementById('tanggal-temuan').value.trim();
+        wa = document.getElementById('wa-temuan').value.trim();
+        deskripsi = document.getElementById('deskripsi-temuan').value.trim();
+        kode = document.getElementById('kode-temuan').value.trim();
+    }
+
+    if (!nama || !tanggal) {
+        showToast('⚠ Mohon isi data wajib', '#e74c3c');
         return;
     }
 
-    // Buat objek item baru
     const newItem = {
         id: Date.now(),
         nama,
@@ -284,57 +366,85 @@ function submitItem() {
         tanggal,
         deskripsi,
         wa,
-        foto: uploadedFileData || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400',
-        status: 'hilang',
+        foto: uploadedFiles[tipe][0] || null,
+        status: tipe === 'temuan' ? 'ditemukan' : 'hilang',
+
         kodeRahasia: kode,
+        tipe: tipe,
     };
 
-    // Tambah ke depan array
     items.unshift(newItem);
 
-    // Simpan ke localStorage agar detail-barang.html bisa baca
     saveItemsToStorage();
 
     renderItems(items, 'items-grid', 2, true);
-    if (showAll) renderItems(items, 'all-items-grid', null, true);
+
+    if (showAll) {
+        renderItems(items, 'all-items-grid', null, true);
+    }
 
     resetForm();
+
     showToast('✓ Barang berhasil dilaporkan!');
 
     setTimeout(() => {
-        document.getElementById('barang-section').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('barang-section')
+            .scrollIntoView({ behavior: 'smooth' });
     }, 600);
 }
 
 
-// ──────────────────────────────────────────────────────────────
+
 // 11. RESET FORM — bersihkan input setelah submit
 //     Menggunakan helper aman agar tidak error di halaman detail
-// ──────────────────────────────────────────────────────────────
+
 function resetForm() {
-    // Helper: set value kosong, skip jika elemen tidak ada
-    const clearVal = (id) => {
+
+    const ids = [
+
+        'nama-hilang',
+        'tanggal-hilang',
+        'wa-hilang',
+        'deskripsi-hilang',
+
+        'nama-temuan',
+        'lokasi-temuan',
+        'tanggal-temuan',
+        'wa-temuan',
+        'deskripsi-temuan',
+        'kode-temuan',
+    ];
+
+    ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
-    };
-
-    clearVal('nama-input');
-    clearVal('lokasi-input');
-    clearVal('tanggal-input');
-    clearVal('deskripsi-input');
-    clearVal('wa-input');
-    clearVal('file-input');
-    clearVal('kode-input');
-
-    // Kembalikan zona upload ke kondisi awal (hanya ada di index.html)
-    const preview     = document.getElementById('preview-img');
-    const placeholder = document.getElementById('upload-placeholder');
-    if (preview)     preview.classList.add('hidden');
-    if (placeholder) placeholder.classList.remove('hidden');
+    });
 
     uploadedFileData = null;
-}
 
+    uploadedFiles = {
+    hilang: [],
+    temuan: [],
+};
+
+['hilang', 'temuan'].forEach(tipe => {
+
+    const container =
+        document.getElementById(`preview-container-${tipe}`);
+
+    const placeholder =
+        document.getElementById(`placeholder-${tipe}`);
+
+    if (container) {
+        container.innerHTML = '';
+        container.classList.add('hidden');
+    }
+
+    if (placeholder) {
+        placeholder.classList.remove('hidden');
+    }
+});
+}
 
 // ──────────────────────────────────────────────────────────────
 // 12. TOAST NOTIFIKASI — muncul di bawah layar lalu hilang sendiri
@@ -578,7 +688,7 @@ function markAsFound() {
     if (!item) return;
 
     // Tanya kode
-    const kode = prompt('Masukkan kode pengaman');
+    const kode = prompt('masukkan kode verifikasi yang diberikan oleh penemu untuk memverifikasi kepemilikan anda');
 
     // Jika salah
     if (kode !== item.kodeRahasia) {
