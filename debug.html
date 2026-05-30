@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<body>
+<button onclick="lihat()">Lihat Items</button>
+<button onclick="hapus()">Hapus Semua Data</button>
+<pre id="out">...</pre>
+<script>
+function lihat() {
+  const data = localStorage.getItem('lf_items');
+  if (!data) { document.getElementById('out').textContent = 'KOSONG - belum ada data'; return; }
+  const parsed = JSON.parse(data);
+  document.getElementById('out').textContent = parsed.length + ' item:\n' +
+    parsed.map(i => 'id='+i.id+' nama='+i.nama+' tipe='+i.tipe).join('\n');
+}
+function hapus() {
+  localStorage.removeItem('lf_items');
+  localStorage.removeItem('lf_comments');
+  document.getElementById('out').textContent = 'DIHAPUS! Sekarang refresh index.html';
+}
+</script>
+</body>
+</html>

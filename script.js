@@ -466,14 +466,9 @@ if (document.getElementById('items-grid')) {
     renderItems(items, 'items-grid', 2);
 }
 
-
-// ================================================================
 //  BAGIAN HALAMAN DETAIL (detail-barang.html)
 //  Semua fungsi di bawah hanya aktif jika #detail-nama ada di DOM
-// ================================================================
 
-
-// ──────────────────────────────────────────────────────────────
 // 14. LOAD HALAMAN DETAIL — baca ?id dari URL, isi data ke HTML
 //
 //  Cara kerja:
@@ -490,7 +485,8 @@ function loadDetailPage() {
 
     // Jika tidak ditemukan
     if (!item) {
-        document.getElementById('detail-nama').textContent      = 'Barang tidak ditemukan';
+        const namaEl = document.getElementById('detail-nama');
+        if (namaEl) namaEl.textContent = 'Barang tidak ditemukan';
         document.getElementById('detail-lokasi').textContent    = '—';
         document.getElementById('detail-tanggal').textContent   = '—';
         document.getElementById('detail-deskripsi').textContent = 'Data barang tidak tersedia.';
@@ -498,7 +494,8 @@ function loadDetailPage() {
     }
 
     // Isi semua elemen dengan data item
-    document.getElementById('detail-nama').textContent      = item.nama;
+    const namaEl = document.getElementById('detail-nama');
+    if (namaEl) namaEl.textContent = item.nama;
     document.getElementById('detail-lokasi').textContent    = item.lokasi;
     document.getElementById('detail-tanggal').textContent   = item.tanggal;
     document.getElementById('detail-deskripsi').textContent = item.deskripsi || 'Tidak ada deskripsi tambahan.';
@@ -674,7 +671,7 @@ function submitComment() {
 // ──────────────────────────────────────────────────────────────
 // 18. INISIALISASI DETAIL — hanya jalan di detail-barang.html
 // ──────────────────────────────────────────────────────────────
-if (document.getElementById('detail-nama')) {
+if (document.getElementById('detail-deskripsi')) {
     loadDetailPage();
 }
 
