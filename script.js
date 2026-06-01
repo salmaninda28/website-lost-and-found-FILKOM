@@ -7,8 +7,9 @@ let items = [
         deskripsi: 'Kunci motor dengan gantungan kunci berbentuk boneka beruang warna cokelat.',
         wa: '081234567890',
         foto: 'https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&q=80',
-        status: 'hilang',
+        status: 'aktif',
         kodeRahasia: '123',
+        tipe: 'temuan',
     },
     {
         id: 2,
@@ -17,7 +18,9 @@ let items = [
         tanggal: '15 April 2026',
         deskripsi: 'Dompet kulit warna hitam, ada KTM di dalamnya.',
         wa: '081298765432',
-        foto: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80'
+        foto: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80',
+        status: 'aktif',
+        tipe: 'temuan',
     },
    
     
@@ -28,7 +31,9 @@ let items = [
         tanggal: '11 April 2026',
         deskripsi: 'Kacamata minus frame kotak warna silver.',
         wa: '087712345678',
-        foto: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400&q=80'
+        foto: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=400&q=80',
+        status: 'aktif',
+        tipe: 'temuan',
     },
 ];
 
@@ -109,22 +114,23 @@ loadItemsFromStorage();
 // 3. KALENDER — inisialisasi flatpickr pada input tanggal
 //    Dibungkus pengecekan agar tidak error di halaman detail
 
+let fpHilang = null;
 if (document.getElementById('tanggal-hilang')) {
-    flatpickr('#tanggal-hilang', {
+    fpHilang = flatpickr('#tanggal-hilang', {
         locale: 'id',
         dateFormat: 'd F Y',
         maxDate: 'today',
     });
 }
 
+let fpTemuan = null;
 if (document.getElementById('tanggal-temuan')) {
-    flatpickr('#tanggal-temuan', {
+    fpTemuan = flatpickr('#tanggal-temuan', {
         locale: 'id',
         dateFormat: 'd F Y',
         maxDate: 'today',
     });
 }
-
 
 
 // 4. RENDER KARTU — membuat HTML satu kartu barang
@@ -143,18 +149,43 @@ function createCard(item, animate = false) {
     ${animate ? 'card-new' : ''}">
 
         <!-- Foto barang -->
-        <div class="h-44 bg-gray-100 overflow-hidden">
+        <div class="h-44 bg-gray-100 overflow-hidden relative">
             <img
                 src="${item.foto || 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400'}"
                 alt="${item.nama}"
                 class="w-full h-full object-cover"
             >
         </div>
-        ${item.status === 'sudah_diklaim' ? `
-        <div class="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
+       ${item.status === 'sudah_diklaim'
+    ? `<div class="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
+         <span class="bg-green-700 text-white text-xs font-bold px-4 py-1.5 rounded-full">SOLVED</span>
+       </div>`
+    : item.tipe === 'hilang'
+        ? `<div class="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">LOST</div>`
+        : item.tipe === 'temuan'
+            ? `<div class="absolute top-3 right-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">FOUND</div>`
+            : ''
+}
+            ${item.status === 'sudah_diklaim'
+    ? `
+    <div class="absolute inset-0 bg-black/50 z-10 flex items-center justify-center">
+        <span class="bg-green-700 text-white text-xs font-bold px-4 py-2 rounded-full">
+            SOLVED
+        </span>
+    </div>
+    `
+    : item.tipe === 'hilang'
+    ? `
+    <div class="absolute top-3 right-3 z-10 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+        LOST
+    </div>
+    `
+    : `
+    <div class="absolute top-3 right-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
         FOUND
-        </div>
-        ` : ''}
+    </div>
+    `
+}
 
         <!-- Info barang -->
         <div class="p-4">
@@ -367,7 +398,7 @@ function submitItem(tipe) {
         deskripsi,
         wa,
         foto: uploadedFiles[tipe][0] || null,
-        status: 'tipe',
+        status: 'aktif',
 
         kodeRahasia: kode,
         tipe: tipe,
@@ -415,12 +446,15 @@ function resetForm() {
         'kode-temuan',
     ];
 
+    if (fpHilang) fpHilang.clear();
+    if (fpTemuan) fpTemuan.clear();
+
     ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
 
-    uploadedFileData = null;
+   
 
     uploadedFiles = {
     hilang: [],
@@ -520,7 +554,7 @@ function loadDetailPage() {
         btnWa.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed', 'pointer-events-none');
     }
 
-    if (item.status === 'ditemukan') {
+    if (item.status === 'sudah_diklaim') {
 
     btnWa.removeAttribute('href');
 
@@ -694,7 +728,7 @@ function markAsFound() {
     }
 
     // Ubah status
-    item.status = 'ditemukan';
+    item.status = 'sudah_diklaim';
 
     // Simpan
     saveItemsToStorage();
