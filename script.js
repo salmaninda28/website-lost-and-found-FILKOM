@@ -136,7 +136,7 @@ if (document.getElementById('tanggal-temuan')) {
 function createCard(item, animate = false) {
     return `
     <div class="item-card relative
-    ${item.status === 'temuan'
+    ${item.status === 'sudah_diklaim'
         ? 'bg-gray-200 opacity-70'
         : 'bg-white'}
     rounded-2xl overflow-hidden shadow-md border border-gray-100
@@ -150,7 +150,7 @@ function createCard(item, animate = false) {
                 class="w-full h-full object-cover"
             >
         </div>
-        ${item.status === 'temuan' ? `
+        ${item.status === 'sudah_diklaim' ? `
         <div class="absolute top-3 right-3 z-10 bg-green-600 text-white text-xs px-3 py-1 rounded-full font-semibold">
         FOUND
         </div>
@@ -367,7 +367,7 @@ function submitItem(tipe) {
         deskripsi,
         wa,
         foto: uploadedFiles[tipe][0] || null,
-        status: tipe === 'temuan' ? 'ditemukan' : 'hilang',
+        status: 'tipe',
 
         kodeRahasia: kode,
         tipe: tipe,
